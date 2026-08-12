@@ -25,7 +25,7 @@ Homepage = "https://github.com/sorgina13/foundry-chargeback-kit"
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
-notebook = ["ipykernel", "pandas"]
+notebook = ["ipykernel", "notebook", "pandas"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/foundry_chargeback_kit"]

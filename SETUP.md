@@ -2,12 +2,18 @@
 
 The order below matters: telemetry must be provable before any figure is priced.
 
+These instructions use [uv](https://docs.astral.sh/uv/) for environments and
+installs. On WSL with the repository on a Windows drive (`/mnt/c/...`), export
+`UV_LINK_MODE=copy` first — hardlinking fails on DrvFs and produces
+invalid-wheel errors.
+
 ## 1. Prepare and test the agent
 
 ```bash
 cd agent
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+uv venv --python 3.13
+source .venv/bin/activate
+uv pip install -r requirements.txt
 python -m unittest -v test_telemetry.py
 ```
 
@@ -114,7 +120,9 @@ subscription keys, prompts or completions in the ledger.
 
 ```bash
 cp .env.example .env      # fill in APIM and telemetry values
-pip install -e .
+uv venv --python 3.13
+source .venv/bin/activate
+uv pip install -e .
 az login
 python -m foundry_chargeback_kit.cli e2e --json
 ```
@@ -125,9 +133,14 @@ and the priced result, run
 instead:
 
 ```bash
-pip install -e '.[notebook]'
+uv pip install -e '.[notebook]'
+python -m ipykernel install --user --name foundry-chargeback-kit \
+  --display-name 'Foundry chargeback kit'
 jupyter notebook notebooks/chargeback-acceptance.ipynb
 ```
+
+Select the **Foundry chargeback kit** kernel before running the notebook, so it
+resolves the same environment the CLI uses.
 
 Its final cell also produces a cross-cost-centre showback table, including fixed
 cost allocation. That cell is disabled by default because it issues real

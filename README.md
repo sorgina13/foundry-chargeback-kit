@@ -66,8 +66,9 @@ Agent Server gives the active W3C trace ID precedence over the plain
 ## Quick start
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
+uv venv --python 3.13
+source .venv/bin/activate
+uv pip install -e .
 cp .env.example .env   # then fill it in
 az login
 ```
@@ -88,9 +89,17 @@ Or work through it stage by stage, with the span tree and priced result shown
 at each step:
 
 ```bash
-pip install -e '.[notebook]'
+uv pip install -e '.[notebook]'
+python -m ipykernel install --user --name foundry-chargeback-kit \
+  --display-name 'Foundry chargeback kit'
 jupyter notebook notebooks/chargeback-acceptance.ipynb
 ```
+
+Select the **Foundry chargeback kit** kernel before running the notebook.
+
+On WSL with the repository on a Windows drive (`/mnt/c/...`), export
+`UV_LINK_MODE=copy` first. Hardlinking fails on DrvFs and produces
+invalid-wheel errors.
 
 A valid result requires all of the following:
 
