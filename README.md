@@ -52,6 +52,65 @@ Never use a caller-supplied cost-centre header as authoritative identity.
 Agent Server gives the active W3C trace ID precedence over the plain
 `x-request-id` header, so the kit uses **one** lowercase 32-hex value for both.
 
+## Why the request ID is also the trace ID
+
+`traceparent` is the W3C Trace Context header — the standard way to carry
+distributed-trace identity across process boundaries:
+
+```text
+00-c4f94d0383e94314b1151202a6845ca9-b8e36b3677ff4e61-01
+│  │                                │                │
+│  │                                │                └─ trace-flags: 01 = sampled
+│  │                                └─ parent-id (span-id): the caller's span
+│  └─ trace-id: constant for the whole distributed operation
+└─ version
+```
+
+The **trace-id** identifies the operation; every span in every service inherits
+it, and Application Insights stores it as `operation_Id`. The **parent-id**
+identifies the specific calling span, which is what lets the receiver attach its
+spans as children. The sampled flag matters too: with `00`, downstream SDKs may
+drop the spans and there is no usage left to price.
+
+The kit sets the trace ID to the same value as `x-request-id` for three reasons.
+
+1. **Agent Server prefers the trace ID.** When it decides what to stamp as
+   `request.id`, the active W3C trace ID takes precedence over the plain header.
+   If the two differ, spans get labelled with the trace ID while the gateway
+   ledger holds the header value, and the join silently returns nothing.
+2. **One key instead of two.** The ledger key, `operation_Id` and
+   `chargeback.request.id` become the same string, so a gateway row leads
+   straight to the model spans. Otherwise every query needs the two-step lookup
+   in [SETUP.md](SETUP.md) step 7: find the root span by `request.id`, read its
+   `operation_Id`, then aggregate spans carrying that `operation_Id`.
+3. **Corroboration.** The same value arriving through two independent mechanisms
+   — an application-written attribute and OpenTelemetry context propagation — is
+   stronger evidence than either alone.
+
+This is why [correlation.py](src/foundry_chargeback_kit/correlation.py) rejects
+anything that is not lowercase 32-hex and nonzero. A value such as
+`req-probe-0001` is not a valid trace ID and would be silently replaced.
+
+### When to stop doing this
+
+Collapsing the two identifiers is a **test-harness simplification**.
+
+- It conflates two concepts. A trace ID is an operational correlation
+  identifier; a request ID is a business key on a financial record. Retries get
+  a fresh trace ID, which forces a decision about whether they are the same
+  billable request.
+- Caller-controlled trace IDs are a security concern. In this prototype the
+  client mints the value and APIM forwards it, so a caller could reuse another
+  tenant's trace ID and inject spans into their operation, or collide IDs to
+  corrupt aggregation.
+- It fights APIM's own instrumentation. With Application Insights diagnostics
+  enabled, APIM establishes the trace itself; forcing a caller-supplied trace ID
+  either overrides that or creates a second, disconnected trace.
+
+In production, let APIM or the caller's genuine upstream context own
+`traceparent`, mint `x-request-id` server-side at the trust boundary with
+validated length and character set, and accept the two-step join.
+
 ## Layout
 
 | Path | Purpose |
