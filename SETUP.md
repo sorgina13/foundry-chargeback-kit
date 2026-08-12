@@ -119,6 +119,20 @@ az login
 python -m foundry_chargeback_kit.cli e2e --json
 ```
 
+For a staged walkthrough that shows the span tree, the deduplicated model spans
+and the priced result, run
+[notebooks/chargeback-acceptance.ipynb](notebooks/chargeback-acceptance.ipynb)
+instead:
+
+```bash
+pip install -e '.[notebook]'
+jupyter notebook notebooks/chargeback-acceptance.ipynb
+```
+
+Its final cell also produces a cross-cost-centre showback table, including fixed
+cost allocation. That cell is disabled by default because it issues real
+billable requests.
+
 `APPLICATIONINSIGHTS_APP_ID` must be the component's Application ID from
 Application Insights **API Access** — not the resource name, instrumentation key
 or connection string. The signed-in identity needs permission to query that

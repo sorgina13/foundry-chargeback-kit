@@ -61,6 +61,7 @@ Agent Server gives the active W3C trace ID precedence over the plain
 | [apim/policy-chargeback.xml](apim/policy-chargeback.xml) | Gateway correlation policy fragment |
 | [apim/apply_policy.py](apim/apply_policy.py) | Merges the fragment into an exported policy without losing existing rules |
 | [src/foundry_chargeback_kit/](src/foundry_chargeback_kit) | Client library: correlation, gateway calls, Application Insights queries, showback |
+| [notebooks/chargeback-acceptance.ipynb](notebooks/chargeback-acceptance.ipynb) | The proof — one request, staged assertions, priced result |
 
 ## Quick start
 
@@ -81,6 +82,14 @@ Run the full acceptance test — one call, then poll telemetry until usage arriv
 
 ```bash
 python -m foundry_chargeback_kit.cli e2e --json
+```
+
+Or work through it stage by stage, with the span tree and priced result shown
+at each step:
+
+```bash
+pip install -e '.[notebook]'
+jupyter notebook notebooks/chargeback-acceptance.ipynb
 ```
 
 A valid result requires all of the following:
