@@ -1,0 +1,5 @@
+azure-identity
+azure-monitor-query
+opentelemetry-api
+opentelemetry-sdk
+requests

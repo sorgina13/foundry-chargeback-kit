@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foundry-chargeback-kit"
+version = "0.1.0"
+description = "End-to-end consumer cost tracing for Microsoft Foundry hosted agents behind Azure API Management"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "sorgina13" }]
+keywords = ["azure", "foundry", "apim", "chargeback", "opentelemetry"]
+dependencies = [
+    "azure-identity",
+    "azure-monitor-query",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/sorgina13/foundry-chargeback-kit"
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foundry_chargeback_kit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
