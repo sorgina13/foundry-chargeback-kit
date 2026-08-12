@@ -23,6 +23,13 @@ request.
 authenticated consumer -> requestId -> traceId -> model spans -> token usage
 ```
 
+![Identification flow: consumer identity is established inbound at the gateway, execution identity is used outbound by the agent, and both are joined on requestId](foundry-chargeback-identity-flow.png)
+
+Consumer identity (*who to bill*) and execution identity (*what incurred the
+cost*) are separate principals that coexist in one request context only at the
+gateway. `requestId` is what joins them afterwards. Fixed compute is shown
+dashed because it is apportioned per billing period, never measured per call.
+
 | Value | Owner | Purpose |
 |---|---|---|
 | `consumerId` / `costCentre` | APIM | Trusted chargeback dimension derived from authenticated identity |
@@ -48,6 +55,13 @@ Never use a caller-supplied cost-centre header as authoritative identity.
 6. Application Insights stores the shared W3C trace ID as `operation_Id`.
 7. The kit queries those spans, verifies lineage, deduplicates model spans and
    applies versioned rates.
+
+![Chain of custody for chargeback.request.id across seven hops, from the caller through APIM, Agent Server, the span processor, Agent Framework and Application Insights to the notebook](request-id-chain-of-custody.png)
+
+APIM is the only place a value is minted. Every later hop copies it, and
+`ChargebackSpanProcessor` fails closed — if the baggage is missing it writes no
+attribute at all, so an unattributable request stays visible instead of being
+silently priced at zero.
 
 Agent Server gives the active W3C trace ID precedence over the plain
 `x-request-id` header, so the kit uses **one** lowercase 32-hex value for both.
