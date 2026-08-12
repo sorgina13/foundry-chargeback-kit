@@ -1,0 +1,66 @@
+<!--
+  Chargeback correlation fragment for the hosted-agent API.
+
+  Prototype scope: it mints or forwards x-request-id and echoes it on both the
+  successful and the error path, so a caller can join its own request to
+  Foundry telemetry.
+
+  PRODUCTION: replace the demonstration cost-centre handling below with
+  validate-jwt plus a server-side mapping. A caller-supplied x-cost-centre
+  header is not proof of entitlement and must never be used as a billing
+  dimension.
+-->
+<policies>
+  <inbound>
+    <base />
+
+    <!--
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+      <openid-config url="https://login.microsoftonline.com/{tenant-id}/v2.0/.well-known/openid-configuration" />
+      <audiences>
+        <audience>{api-application-id}</audience>
+      </audiences>
+    </validate-jwt>
+    <set-variable name="costCentre" value="@{
+        var principal = context.Principal;
+        var subject = principal?.Claims.GetValueOrDefault("azp",
+                      principal?.Claims.GetValueOrDefault("oid", "unattributed"));
+        return LookupCostCentre(subject);
+    }" />
+    -->
+
+    <!-- Preserve a caller-supplied request ID, otherwise mint one at the trust boundary. -->
+    <set-variable name="requestId" value="@(context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, context.RequestId.ToString()))" />
+    <set-header name="x-request-id" exists-action="override">
+      <value>@((string)context.Variables[&quot;requestId&quot;])</value>
+    </set-header>
+
+    <!-- Demonstration only. Derive this from validated claims in production. -->
+    <set-header name="x-cost-centre" exists-action="skip">
+      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-cost-centre&quot;, &quot;unattributed&quot;))</value>
+    </set-header>
+
+    <!--
+      Do not unconditionally overwrite traceparent: that breaks the caller's trace.
+      Prefer APIM Application Insights diagnostics with W3C correlation to establish
+      a trace when the caller supplies none.
+    -->
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+    <!-- Echo so the client can join without trusting an upstream identifier. -->
+    <set-header name="x-request-id" exists-action="override">
+      <value>@((string)context.Variables[&quot;requestId&quot;])</value>
+    </set-header>
+  </outbound>
+  <on-error>
+    <base />
+    <!-- Correlation must survive failures, otherwise failed billable calls are lost. -->
+    <set-header name="x-request-id" exists-action="override">
+      <value>@((string)context.Variables[&quot;requestId&quot;])</value>
+    </set-header>
+  </on-error>
+</policies>

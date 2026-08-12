@@ -1,0 +1,7 @@
+# Keep versions aligned with the current Microsoft Foundry Hosted Agent template.
+# Pin these before a production deployment so telemetry behaviour cannot change silently.
+agent-framework-foundry
+agent-framework-foundry-hosting
+azure-identity
+python-dotenv
+pydantic

@@ -13,11 +13,12 @@ authors = [{ name = "sorgina13" }]
 keywords = ["azure", "foundry", "apim", "chargeback", "opentelemetry"]
 dependencies = [
     "azure-identity",
-    "azure-monitor-query",
-    "opentelemetry-api",
-    "opentelemetry-sdk",
+    "python-dotenv",
     "requests",
 ]
+
+[project.scripts]
+chargeback = "foundry_chargeback_kit.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/sorgina13/foundry-chargeback-kit"
